@@ -1,57 +1,36 @@
-version: 2
-jobs:
-  build-and-test:
-    macos:
-      xcode: "9.0"
+steps:
+  - title: Install your first GitHub Apps
+    description: Learn what GitHub Apps are and how to install them
+    event: issues.closed
+    link: '{{ repoUrl }}/issues/1'
+    actions:
+    - type: updateBranchProtection
+    - type: createPullRequest
+      title: Trigger the app
+      head: add-to-list
+      body: 02_trigger-wip.md
+      action_id: first_pr
+    - type: respond
+      with: 01_successful-close.md
+      data:
+        url: '%actions.first_pr.data.html_url%'
 
-    steps:
-      - checkout
-      - run:
-          name: Fetch CocoaPods Specs
-          command: |
-            curl https://cocoapods-specs.circleci.com/fetch-cocoapods-repo-from-s3.sh | bash -s cf
-      - run:
-          name: Install CocoaPods
-          command: pod install --verbose
-
-      - run:
-          name: Build and run tests
-          command: fastlane scan
-          environment:
-            SCAN_DEVICE: iPhone 8
-            SCAN_SCHEME: WebTests
-
-      - store_test_results:
-          path: test_output/report.xml
-      - store_artifacts:
-          path: /tmp/test-results
-          destination: scan-test-results
-      - store_artifacts:
-          path: ~/Library/Logs/scan
-          destination: scan-logs
-
-  swiftlint:
-    docker:
-      - image: dantoml/swiftlint:latest
-    steps:
-      - checkout
-      - run: swiftlint lint --reporter junit | tee result.xml
-      - store_artifacts:
-          path: result.xml
-      - store_test_results:
-          path: result.xml
-
-  danger:
-    docker:
-      - image: dantoml/danger:latest
-    steps:
-      - checkout
-      - run: danger
-
-workflows:
-  version: 2
-  build-test-lint:
-    jobs:
-      - swiftlint
-      - danger
-      - build-and-test
+  - title: Trigger the WIP app
+    description: Once installed, learn how to interact with the app
+    event: "pull_request.edited"
+    link: '{{ repoUrl }}/pull/1'
+    actions:
+      - type: gate
+        left: '%payload.pull_request.title%'
+        operator: search
+        right: WIP
+        else:
+          - type: respond
+            with: 02_WIP-error-message.md
+      - type: mergeBranch
+        head: finish-list
+        base: add-to-list
+      - type: respond
+        with: 02_adding-smee.md
+        data:
+         repoUrl: '%payload.repository.html_url%'
