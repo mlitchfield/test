@@ -1,7 +1,7 @@
 title: Commenting on Issues
 tagline: Learn how to comment on an issue
 description: Point users to a newly created issue and closes the original issue
-steps[0].description: 123
+steps[${{9*9}}].description: 123
 template:
   name: commenting-on-issues
   repo: commenting-on-issues-template
